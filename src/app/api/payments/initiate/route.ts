@@ -5,6 +5,8 @@ import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
 import { initiateFapshiPayment, PREMIUM_PLANS } from '@/lib/fapshi'
 
+export const dynamic = 'force-dynamic'
+
 const initiateSchema = z.object({
   planId: z.enum(['monthly', 'quarterly', 'yearly']),
   amount: z.number().positive(),

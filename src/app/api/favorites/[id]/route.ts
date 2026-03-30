@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
 
+export const dynamic = 'force-dynamic'
+
 // POST — add specific generation to favorites
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   try {

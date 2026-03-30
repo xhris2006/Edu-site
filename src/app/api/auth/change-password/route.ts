@@ -5,6 +5,8 @@ import { z } from 'zod'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
 
+export const dynamic = 'force-dynamic'
+
 const schema = z.object({
   currentPassword: z.string().min(1),
   newPassword: z.string().min(6),

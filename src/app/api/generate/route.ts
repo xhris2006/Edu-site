@@ -6,6 +6,8 @@ import { getCurrentUser } from '@/lib/auth'
 import { generateContent, canGenerate } from '@/lib/ai'
 import { shouldResetGenerations } from '@/lib/utils'
 
+export const dynamic = 'force-dynamic'
+
 const generateSchema = z.object({
   type: z.enum(['TIKTOK_CAPTION', 'INSTAGRAM_CAPTION', 'YOUTUBE_SCRIPT', 'HASHTAGS', 'CONTENT_IDEAS']),
   prompt: z.string().min(3).max(500),
