@@ -21,12 +21,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       } else {
         setChecking(false)
       }
-    }).catch(() => router.push('/auth/login'))
+    }).catch(() => router.push('/login'))
   }, [router])
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' })
-    router.push('/auth/login')
+    router.push('/login')
   }
 
   if (checking) {

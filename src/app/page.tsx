@@ -98,19 +98,19 @@ export default function LandingPage() {
           <Link href="#pricing" className="text-text-secondary hover:text-text-primary text-sm transition-colors">
             Pricing
           </Link>
-          <Link href="/auth/login" className="btn-secondary text-sm py-2 px-4">
+          <Link href="/login" className="btn-secondary text-sm py-2 px-4">
             Se connecter
           </Link>
-          <Link href="/auth/register" className="btn-primary text-sm py-2 px-5">
+          <Link href="/register" className="btn-primary text-sm py-2 px-5">
             Commencer →
           </Link>
         </div>
         {/* Mobile nav */}
         <div className="flex md:hidden items-center gap-2">
-          <Link href="/auth/login" className="btn-ghost text-sm py-2 px-3">
+          <Link href="/login" className="btn-ghost text-sm py-2 px-3">
             Connexion
           </Link>
-          <Link href="/auth/register" className="btn-primary text-sm py-2 px-4">
+          <Link href="/register" className="btn-primary text-sm py-2 px-4">
             Début →
           </Link>
         </div>
@@ -137,7 +137,7 @@ export default function LandingPage() {
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-          <Link href="/auth/register" className="btn-primary text-base py-4 px-8 flex items-center gap-2 group">
+          <Link href="/register" className="btn-primary text-base py-4 px-8 flex items-center gap-2 group">
             Commencer gratuitement
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Link>
@@ -211,7 +211,7 @@ export default function LandingPage() {
                 </li>
               ))}
             </ul>
-            <Link href="/auth/register" className="btn-secondary w-full text-center block">
+            <Link href="/register" className="btn-secondary w-full text-center block">
               Commencer gratuitement
             </Link>
           </div>
@@ -241,7 +241,7 @@ export default function LandingPage() {
                 </li>
               ))}
             </ul>
-            <Link href="/auth/register" className="btn-primary w-full text-center block">
+            <Link href="/register" className="btn-primary w-full text-center block">
               S&apos;abonner maintenant
             </Link>
           </div>
@@ -283,7 +283,7 @@ export default function LandingPage() {
           <p className="text-text-secondary text-lg mb-8 relative z-10">
             Rejoins des milliers de créateurs africains sur CreatorZap
           </p>
-          <Link href="/auth/register" className="btn-primary text-base py-4 px-10 inline-flex items-center gap-2 relative z-10">
+          <Link href="/register" className="btn-primary text-base py-4 px-10 inline-flex items-center gap-2 relative z-10">
             <Zap className="w-5 h-5" />
             Commencer maintenant — Gratuit
           </Link>
@@ -307,8 +307,8 @@ export default function LandingPage() {
             — Yaoundé, Cameroun 🇨🇲
           </p>
           <div className="flex items-center gap-4 text-text-muted text-xs">
-            <Link href="/auth/login" className="hover:text-text-primary transition-colors">Connexion</Link>
-            <Link href="/auth/register" className="hover:text-text-primary transition-colors">Inscription</Link>
+            <Link href="/login" className="hover:text-text-primary transition-colors">Connexion</Link>
+            <Link href="/register" className="hover:text-text-primary transition-colors">Inscription</Link>
           </div>
         </div>
       </footer>

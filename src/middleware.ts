@@ -5,7 +5,7 @@ import { verifyToken } from '@/lib/auth'
 // Routes that require authentication
 const PROTECTED_ROUTES = ['/dashboard', '/generate', '/history', '/favorites', '/trends', '/pricing', '/settings', '/admin']
 // Routes that redirect if already logged in
-const AUTH_ROUTES = ['/auth/login', '/auth/register']
+const AUTH_ROUTES = ['/login', '/register']
 // Admin-only routes
 const ADMIN_ROUTES = ['/admin']
 
@@ -27,7 +27,7 @@ export async function middleware(req: NextRequest) {
 
   // Redirect unauthenticated users away from protected routes
   if (isProtected && !payload) {
-    const loginUrl = new URL('/auth/login', req.url)
+    const loginUrl = new URL('/login', req.url)
     loginUrl.searchParams.set('redirect', pathname)
     return NextResponse.redirect(loginUrl)
   }
@@ -55,6 +55,7 @@ export const config = {
     '/pricing/:path*',
     '/settings/:path*',
     '/admin/:path*',
-    '/auth/:path*',
+    '/login',
+    '/register',
   ],
 }

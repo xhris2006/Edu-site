@@ -1,10 +1,11 @@
 // src/app/api/auth/login/route.ts
-import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
+import { Prisma } from '@prisma/client'
 import bcrypt from 'bcryptjs'
+import { cookies } from 'next/headers'
+import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import prisma from '@/lib/prisma'
 import { signToken, getAuthCookieOptions } from '@/lib/auth'
+import prisma from '@/lib/prisma'
 import { shouldResetGenerations } from '@/lib/utils'
 
 const loginSchema = z.object({
@@ -14,8 +15,17 @@ const loginSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
+    if (!process.env.DATABASE_URL) {
+      return NextResponse.json(
+        { success: false, error: 'DATABASE_URL is not configured' },
+        { status: 503 }
+      )
+    }
+
     const body = await req.json()
-    const { email, password } = loginSchema.parse(body)
+    const parsed = loginSchema.parse(body)
+    const email = parsed.email.trim().toLowerCase()
+    const { password } = parsed
 
     const user = await prisma.user.findUnique({ where: { email } })
     if (!user) {
@@ -27,7 +37,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Email ou mot de passe incorrect' }, { status: 401 })
     }
 
-    // Reset daily generations if new day
     if (shouldResetGenerations(user.lastResetAt)) {
       await prisma.user.update({
         where: { id: user.id },
@@ -52,8 +61,23 @@ export async function POST(req: NextRequest) {
     })
   } catch (err) {
     if (err instanceof z.ZodError) {
-      return NextResponse.json({ success: false, error: 'Données invalides' }, { status: 400 })
+      return NextResponse.json({ success: false, error: 'Donnees invalides' }, { status: 400 })
     }
+    if (err instanceof Prisma.PrismaClientInitializationError) {
+      console.error('[LOGIN][PRISMA_INIT]', err)
+      return NextResponse.json(
+        { success: false, error: 'Connexion a la base de donnees impossible' },
+        { status: 503 }
+      )
+    }
+    if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      console.error('[LOGIN][PRISMA_KNOWN]', err)
+      return NextResponse.json(
+        { success: false, error: 'Base de donnees non prete pour la connexion' },
+        { status: 503 }
+      )
+    }
+
     console.error('[LOGIN]', err)
     return NextResponse.json({ success: false, error: 'Erreur serveur' }, { status: 500 })
   }

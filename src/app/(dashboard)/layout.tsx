@@ -29,13 +29,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     fetch('/api/auth/me')
       .then(r => r.json())
       .then(d => d.success && setUser(d.data))
-      .catch(() => router.push('/auth/login'))
+      .catch(() => router.push('/login'))
   }, [router])
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' })
     toast.success('Déconnecté')
-    router.push('/auth/login')
+    router.push('/login')
   }
 
   const navItems = [
