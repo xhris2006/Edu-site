@@ -1,6 +1,6 @@
 'use client'
 // src/app/(dashboard)/generate/page.tsx
-import { useState, useEffect } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import {
   Sparkles, Film, Instagram, Youtube, Hash, Lightbulb,
@@ -51,7 +51,7 @@ const EXAMPLE_PROMPTS: Record<ContentType, Record<Language, string>> = {
   },
 }
 
-export default function GeneratePage() {
+function GeneratePageContent() {
   const searchParams = useSearchParams()
   const initialType = (searchParams.get('type') as ContentType) || 'TIKTOK_CAPTION'
 
@@ -317,5 +317,13 @@ export default function GeneratePage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function GeneratePage() {
+  return (
+    <Suspense fallback={<div className="max-w-3xl mx-auto" />}>
+      <GeneratePageContent />
+    </Suspense>
   )
 }

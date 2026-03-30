@@ -1,11 +1,11 @@
 'use client'
 // src/app/(dashboard)/payment-success/page.tsx
-import { useEffect } from 'react'
+import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { CheckCircle, XCircle, Crown, Sparkles, ArrowRight } from 'lucide-react'
 
-export default function PaymentResultPage() {
+function PaymentResultPageContent() {
   const searchParams = useSearchParams()
   const payment = searchParams.get('payment')
   const error = searchParams.get('error')
@@ -65,5 +65,13 @@ export default function PaymentResultPage() {
         </>
       )}
     </div>
+  )
+}
+
+export default function PaymentResultPage() {
+  return (
+    <Suspense fallback={<div className="max-w-md mx-auto py-16" />}>
+      <PaymentResultPageContent />
+    </Suspense>
   )
 }
