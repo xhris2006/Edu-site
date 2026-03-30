@@ -74,6 +74,14 @@ export async function POST(req: NextRequest) {
     }
     if (err instanceof Prisma.PrismaClientKnownRequestError) {
       console.error('[REGISTER][PRISMA_KNOWN]', err)
+
+      if (err.code === 'P2021') {
+        return NextResponse.json(
+          { success: false, error: 'Schema base de donnees manquant en production. Lance prisma db push sur DATABASE_URL.' },
+          { status: 503 }
+        )
+      }
+
       return NextResponse.json(
         { success: false, error: 'Base de donnees non prete pour l inscription' },
         { status: 503 }
