@@ -4,6 +4,8 @@ import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
 import { shouldResetGenerations } from '@/lib/utils'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   try {
     const payload = await getCurrentUser()
