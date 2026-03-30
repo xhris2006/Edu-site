@@ -170,7 +170,7 @@ FAPSHI_API_KEY="your-api-key"
 
 | Variable | Value |
 |----------|-------|
-| `DATABASE_URL` | Your Railway/Supabase PostgreSQL URL |
+| `DATABASE_URL` | Your Railway/Supabase PostgreSQL URL (with `sslmode=require`) |
 | `JWT_SECRET` | A strong random string |
 | `AI_BASE_URL` | Your AI provider URL |
 | `AI_API_KEY` | Your AI API key |
@@ -184,8 +184,9 @@ FAPSHI_API_KEY="your-api-key"
 ### Database: Railway (PostgreSQL)
 
 1. Go to [railway.app](https://railway.app) → New Project → PostgreSQL
-2. Copy the `DATABASE_URL` from Railway → add to Vercel env vars
-3. After deploy, run migrations:
+2. Copy the `DATABASE_URL` from Railway and ensure it includes `sslmode=require`
+3. Add it to Vercel env vars as `DATABASE_URL`
+4. After deploy, run migrations:
 
 ```bash
 # Set your production DATABASE_URL locally, then:
