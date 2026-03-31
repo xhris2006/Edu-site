@@ -1,4 +1,4 @@
-import { Role } from '@prisma/client'
+import { Plan, Prisma, Role } from '@prisma/client'
 import prisma from '@/lib/prisma'
 import { PREMIUM_DAILY_QUOTA, getDailyQuotaForPlan } from '@/lib/utils'
 
@@ -58,7 +58,7 @@ export function getUserSeedData({
   name: string
   hashedPassword: string
   language: 'fr' | 'en'
-}) {
+}): Prisma.UserCreateInput {
   const admin = isConfiguredAdminEmail(email)
 
   return {
@@ -66,8 +66,8 @@ export function getUserSeedData({
     email,
     password: hashedPassword,
     language,
-    role: admin ? 'ADMIN' : 'USER',
-    plan: admin ? 'PREMIUM' : 'FREE',
+    role: admin ? Role.ADMIN : Role.USER,
+    plan: admin ? Plan.PREMIUM : Plan.FREE,
     generationsLeft: admin ? PREMIUM_DAILY_QUOTA : getDailyQuotaForPlan('FREE'),
   }
 }
