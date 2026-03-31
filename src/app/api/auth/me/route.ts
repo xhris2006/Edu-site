@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
+import { syncConfiguredAdminStatus } from '@/lib/admin'
 import { FREE_DAILY_QUOTA, getDailyQuotaForPlan, getGenerationsUsedToday, shouldResetGenerations } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
@@ -11,13 +12,14 @@ export async function GET() {
     const payload = await getCurrentUser()
     if (!payload) return NextResponse.json({ success: false, error: 'Non authentifié' }, { status: 401 })
 
-    const user = await prisma.user.findUnique({
+    const existingUser = await prisma.user.findUnique({
       where: { id: payload.sub },
       select: {
         id: true, name: true, email: true, role: true, plan: true,
         language: true, generationsLeft: true, lastResetAt: true, createdAt: true,
       },
     })
+    const user = existingUser ? await syncConfiguredAdminStatus(existingUser) : null
     if (!user) return NextResponse.json({ success: false, error: 'Utilisateur introuvable' }, { status: 404 })
 
     // Reset daily quota if new day

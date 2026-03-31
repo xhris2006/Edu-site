@@ -1,4 +1,3 @@
-// src/app/layout.tsx — Root layout
 import type { Metadata } from 'next'
 import { Syne, Inter, JetBrains_Mono } from 'next/font/google'
 import { Toaster } from 'react-hot-toast'
@@ -22,15 +21,26 @@ const jetbrains = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'CreatorZap — AI Content for African Creators',
+  title: 'CreatorZap - AI Content for African Creators',
   description:
-    'Generate viral TikTok captions, Instagram posts, YouTube scripts and more. Powered by AI, built for African creators.',
+    'Generate viral TikTok captions, Instagram posts, YouTube scripts, download clean videos, and manage creators with AI.',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
   keywords: ['content creator', 'AI', 'TikTok', 'Instagram', 'YouTube', 'Africa', 'Cameroun'],
   authors: [{ name: 'CreatorZap' }],
+  icons: {
+    icon: '/favicon.ico',
+  },
   openGraph: {
-    title: 'CreatorZap — AI Content for African Creators',
-    description: 'Generate viral content in seconds',
+    title: 'CreatorZap - AI Content for African Creators',
+    description: 'Generate viral content, manage creator quotas, and download clean social videos.',
     type: 'website',
+    images: ['/opengraph-image'],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'CreatorZap - AI Content for African Creators',
+    description: 'Generate viral content and download clean social videos.',
+    images: ['/twitter-image'],
   },
 }
 

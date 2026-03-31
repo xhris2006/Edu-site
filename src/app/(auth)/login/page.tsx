@@ -1,10 +1,11 @@
 'use client'
-// src/app/(auth)/login/page.tsx
+
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Eye, EyeOff, Zap, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { markWhatsAppPopupForNextAuthRedirect } from '@/components/whatsapp-channel-popup'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -16,13 +17,13 @@ export default function LoginPage() {
   const t = {
     fr: {
       title: 'Connexion',
-      subtitle: 'Accédez à votre espace créateur',
+      subtitle: 'Accedez a votre espace createur',
       email: 'Email',
       password: 'Mot de passe',
-      forgot: 'Mot de passe oublié?',
+      forgot: 'Mot de passe oublie ?',
       btn: 'Se connecter',
       loading: 'Connexion...',
-      noAccount: 'Pas encore de compte?',
+      noAccount: 'Pas encore de compte ?',
       register: "S'inscrire",
       error: 'Email ou mot de passe incorrect',
     },
@@ -43,15 +44,19 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       })
+
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || t.error)
-      toast.success(lang === 'fr' ? 'Connexion réussie! 🎉' : 'Login successful! 🎉')
+
+      markWhatsAppPopupForNextAuthRedirect()
+      toast.success(lang === 'fr' ? 'Connexion reussie !' : 'Login successful!')
       router.push(data.data?.role === 'ADMIN' ? '/admin' : '/dashboard')
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : t.error)
@@ -62,26 +67,24 @@ export default function LoginPage() {
 
   return (
     <div className="w-full max-w-md animate-fade-in">
-      {/* Lang toggle */}
-      <div className="flex justify-end mb-6">
+      <div className="mb-6 flex justify-end">
         <button
-          onClick={() => setLang(l => l === 'fr' ? 'en' : 'fr')}
-          className="text-xs text-text-muted hover:text-primary transition-colors border border-card-border rounded-full px-3 py-1"
+          onClick={() => setLang(current => current === 'fr' ? 'en' : 'fr')}
+          className="rounded-full border border-card-border px-3 py-1 text-xs text-text-muted transition-colors hover:text-primary"
         >
-          {lang === 'fr' ? '🇫🇷 FR' : '🇬🇧 EN'}
+          {lang === 'fr' ? 'FR' : 'EN'}
         </button>
       </div>
 
       <div className="card border-card-border/60 p-8">
-        {/* Icon */}
-        <div className="flex justify-center mb-6">
-          <div className="w-14 h-14 bg-primary/10 border border-primary/20 rounded-2xl flex items-center justify-center">
-            <Zap className="w-7 h-7 text-primary" />
+        <div className="mb-6 flex justify-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
+            <Zap className="h-7 w-7 text-primary" />
           </div>
         </div>
 
-        <h1 className="font-display text-2xl font-bold text-text-primary text-center mb-1">{t.title}</h1>
-        <p className="text-text-secondary text-sm text-center mb-8">{t.subtitle}</p>
+        <h1 className="mb-1 text-center font-display text-2xl font-bold text-text-primary">{t.title}</h1>
+        <p className="mb-8 text-center text-sm text-text-secondary">{t.subtitle}</p>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
@@ -91,16 +94,16 @@ export default function LoginPage() {
               className="input"
               placeholder="vous@exemple.com"
               value={form.email}
-              onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+              onChange={e => setForm(current => ({ ...current, email: e.target.value }))}
               required
               autoComplete="email"
             />
           </div>
 
           <div>
-            <div className="flex items-center justify-between mb-2">
+            <div className="mb-2 flex items-center justify-between">
               <label className="label mb-0">{t.password}</label>
-              <span className="text-xs text-primary hover:underline cursor-pointer">{t.forgot}</span>
+              <span className="cursor-pointer text-xs text-primary hover:underline">{t.forgot}</span>
             </div>
             <div className="relative">
               <input
@@ -108,24 +111,24 @@ export default function LoginPage() {
                 className="input pr-12"
                 placeholder="••••••••"
                 value={form.password}
-                onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                onChange={e => setForm(current => ({ ...current, password: e.target.value }))}
                 required
                 autoComplete="current-password"
               />
               <button
                 type="button"
-                onClick={() => setShowPwd(v => !v)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors"
+                onClick={() => setShowPwd(value => !value)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted transition-colors hover:text-text-primary"
               >
-                {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
           </div>
 
-          <button type="submit" disabled={loading} className="btn-primary w-full flex items-center justify-center gap-2">
+          <button type="submit" disabled={loading} className="btn-primary flex w-full items-center justify-center gap-2">
             {loading ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
                 {t.loading}
               </>
             ) : (
@@ -134,9 +137,9 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="text-center text-text-muted text-sm mt-6">
+        <p className="mt-6 text-center text-sm text-text-muted">
           {t.noAccount}{' '}
-          <Link href="/register" className="text-primary hover:underline font-medium">
+          <Link href="/register" className="font-medium text-primary hover:underline">
             {t.register}
           </Link>
         </p>

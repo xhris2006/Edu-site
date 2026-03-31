@@ -5,6 +5,7 @@ import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { signToken, getAuthCookieOptions } from '@/lib/auth'
+import { syncConfiguredAdminStatus } from '@/lib/admin'
 import prisma from '@/lib/prisma'
 import { getDailyQuotaForPlan, shouldResetGenerations } from '@/lib/utils'
 
@@ -27,7 +28,8 @@ export async function POST(req: NextRequest) {
     const email = parsed.email.trim().toLowerCase()
     const { password } = parsed
 
-    const user = await prisma.user.findUnique({ where: { email } })
+    const existingUser = await prisma.user.findUnique({ where: { email } })
+    const user = existingUser ? await syncConfiguredAdminStatus(existingUser) : null
     if (!user) {
       return NextResponse.json({ success: false, error: 'Email ou mot de passe incorrect' }, { status: 401 })
     }

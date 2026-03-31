@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken } from '@/lib/auth'
 
 // Routes that require authentication
-const PROTECTED_ROUTES = ['/dashboard', '/generate', '/history', '/favorites', '/trends', '/pricing', '/settings', '/admin']
+const PROTECTED_ROUTES = ['/dashboard', '/generate', '/history', '/favorites', '/trends', '/pricing', '/settings', '/downloads', '/admin']
 // Routes that redirect if already logged in
 const AUTH_ROUTES = ['/login', '/register']
 // Admin-only routes
@@ -34,7 +34,7 @@ export async function middleware(req: NextRequest) {
 
   // Redirect authenticated users away from auth pages
   if (isAuthRoute && payload) {
-    return NextResponse.redirect(new URL('/dashboard', req.url))
+    return NextResponse.redirect(new URL(payload.role === 'ADMIN' ? '/admin' : '/dashboard', req.url))
   }
 
   // Protect admin routes
@@ -54,6 +54,7 @@ export const config = {
     '/trends/:path*',
     '/pricing/:path*',
     '/settings/:path*',
+    '/downloads/:path*',
     '/admin/:path*',
     '/login',
     '/register',

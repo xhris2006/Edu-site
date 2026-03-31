@@ -1,10 +1,11 @@
 'use client'
-// src/app/(auth)/register/page.tsx
+
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Eye, EyeOff, Zap, Loader2, CheckCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { markWhatsAppPopupForNextAuthRedirect } from '@/components/whatsapp-channel-popup'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -15,17 +16,17 @@ export default function RegisterPage() {
 
   const t = {
     fr: {
-      title: 'Créer un compte',
-      subtitle: 'Rejoins des milliers de créateurs africains',
+      title: 'Creer un compte',
+      subtitle: 'Rejoignez des milliers de createurs africains',
       name: 'Nom complet',
       email: 'Email',
       password: 'Mot de passe',
-      language: 'Langue préférée',
+      language: 'Langue preferee',
       btn: "S'inscrire",
-      loading: 'Création...',
-      hasAccount: 'Déjà un compte?',
+      loading: 'Creation...',
+      hasAccount: 'Deja un compte ?',
       login: 'Se connecter',
-      perks: ['5 générations gratuites/jour', 'Tous les types de contenu', 'FR & EN supporté'],
+      perks: ['0/5 utilise au depart', '5 generations maximum par jour', 'Tous les types de contenu'],
     },
     en: {
       title: 'Create Account',
@@ -38,27 +39,33 @@ export default function RegisterPage() {
       loading: 'Creating...',
       hasAccount: 'Already have an account?',
       login: 'Sign In',
-      perks: ['5 free generations/day', 'All content types', 'FR & EN supported'],
+      perks: ['Start at 0/5 used', '5 generations max per day', 'All content types included'],
     },
   }[lang]
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
     if (form.password.length < 6) {
-      toast.error(lang === 'fr' ? 'Mot de passe trop court (min 6 chars)' : 'Password too short (min 6 chars)')
+      toast.error(lang === 'fr' ? 'Mot de passe trop court (min 6 caracteres)' : 'Password too short (min 6 chars)')
       return
     }
+
     setLoading(true)
+
     try {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...form, language: lang }),
       })
+
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error)
-      toast.success(lang === 'fr' ? 'Compte créé! Bienvenue 🎉' : 'Account created! Welcome 🎉')
-      router.push('/dashboard')
+      if (!res.ok) throw new Error(data.error || 'Erreur')
+
+      markWhatsAppPopupForNextAuthRedirect()
+      toast.success(lang === 'fr' ? 'Compte cree !' : 'Account created!')
+      router.push(data.data?.role === 'ADMIN' ? '/admin' : '/dashboard')
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Erreur')
     } finally {
@@ -68,33 +75,30 @@ export default function RegisterPage() {
 
   return (
     <div className="w-full max-w-md animate-fade-in">
-      {/* Lang toggle */}
-      <div className="flex justify-end mb-6">
+      <div className="mb-6 flex justify-end">
         <button
-          onClick={() => setLang(l => l === 'fr' ? 'en' : 'fr')}
-          className="text-xs text-text-muted hover:text-primary transition-colors border border-card-border rounded-full px-3 py-1"
+          onClick={() => setLang(current => current === 'fr' ? 'en' : 'fr')}
+          className="rounded-full border border-card-border px-3 py-1 text-xs text-text-muted transition-colors hover:text-primary"
         >
-          {lang === 'fr' ? '🇫🇷 FR' : '🇬🇧 EN'}
+          {lang === 'fr' ? 'FR' : 'EN'}
         </button>
       </div>
 
       <div className="card border-card-border/60 p-8">
-        {/* Icon */}
-        <div className="flex justify-center mb-6">
-          <div className="w-14 h-14 bg-primary/10 border border-primary/20 rounded-2xl flex items-center justify-center">
-            <Zap className="w-7 h-7 text-primary" />
+        <div className="mb-6 flex justify-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
+            <Zap className="h-7 w-7 text-primary" />
           </div>
         </div>
 
-        <h1 className="font-display text-2xl font-bold text-text-primary text-center mb-1">{t.title}</h1>
-        <p className="text-text-secondary text-sm text-center mb-6">{t.subtitle}</p>
+        <h1 className="mb-1 text-center font-display text-2xl font-bold text-text-primary">{t.title}</h1>
+        <p className="mb-6 text-center text-sm text-text-secondary">{t.subtitle}</p>
 
-        {/* Perks */}
-        <div className="bg-dark-50 rounded-xl p-4 mb-6 space-y-2">
-          {t.perks.map(p => (
-            <div key={p} className="flex items-center gap-2 text-xs text-text-secondary">
-              <CheckCircle className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-              {p}
+        <div className="mb-6 space-y-2 rounded-xl bg-dark-50 p-4">
+          {t.perks.map(item => (
+            <div key={item} className="flex items-center gap-2 text-xs text-text-secondary">
+              <CheckCircle className="h-3.5 w-3.5 shrink-0 text-primary" />
+              {item}
             </div>
           ))}
         </div>
@@ -105,9 +109,9 @@ export default function RegisterPage() {
             <input
               type="text"
               className="input"
-              placeholder="Aminata Koné"
+              placeholder="Aminata Kone"
               value={form.name}
-              onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+              onChange={e => setForm(current => ({ ...current, name: e.target.value }))}
               required
             />
           </div>
@@ -119,7 +123,7 @@ export default function RegisterPage() {
               className="input"
               placeholder="vous@exemple.com"
               value={form.email}
-              onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+              onChange={e => setForm(current => ({ ...current, email: e.target.value }))}
               required
             />
           </div>
@@ -132,21 +136,20 @@ export default function RegisterPage() {
                 className="input pr-12"
                 placeholder="••••••••"
                 value={form.password}
-                onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                onChange={e => setForm(current => ({ ...current, password: e.target.value }))}
                 required
                 minLength={6}
               />
               <button
                 type="button"
-                onClick={() => setShowPwd(v => !v)}
+                onClick={() => setShowPwd(value => !value)}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"
               >
-                {showPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
           </div>
 
-          {/* Language select */}
           <div>
             <label className="label">{t.language}</label>
             <select
@@ -154,15 +157,15 @@ export default function RegisterPage() {
               value={lang}
               onChange={e => setLang(e.target.value as 'fr' | 'en')}
             >
-              <option value="fr">🇫🇷 Français</option>
-              <option value="en">🇬🇧 English</option>
+              <option value="fr">Francais</option>
+              <option value="en">English</option>
             </select>
           </div>
 
-          <button type="submit" disabled={loading} className="btn-primary w-full flex items-center justify-center gap-2 mt-2">
+          <button type="submit" disabled={loading} className="btn-primary mt-2 flex w-full items-center justify-center gap-2">
             {loading ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
                 {t.loading}
               </>
             ) : (
@@ -171,9 +174,9 @@ export default function RegisterPage() {
           </button>
         </form>
 
-        <p className="text-center text-text-muted text-sm mt-6">
+        <p className="mt-6 text-center text-sm text-text-muted">
           {t.hasAccount}{' '}
-          <Link href="/login" className="text-primary hover:underline font-medium">
+          <Link href="/login" className="font-medium text-primary hover:underline">
             {t.login}
           </Link>
         </p>

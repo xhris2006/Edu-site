@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
+import { isConfiguredAdminEmail } from '@/lib/admin'
+import { getDailyQuotaForPlan } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,18 +24,34 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
     const body = await req.json()
     const data = updateSchema.parse(body)
+    const targetUser = await prisma.user.findUnique({
+      where: { id: params.id },
+      select: { id: true, email: true, role: true },
+    })
 
-    // If upgrading to premium, give unlimited generations
+    if (!targetUser) {
+      return NextResponse.json({ success: false, error: 'Utilisateur introuvable' }, { status: 404 })
+    }
+
+    if (payload.sub === params.id && data.role === 'USER') {
+      return NextResponse.json({ success: false, error: 'Vous ne pouvez pas retirer votre propre rôle admin.' }, { status: 400 })
+    }
+
+    if (isConfiguredAdminEmail(targetUser.email) && data.role === 'USER') {
+      return NextResponse.json({ success: false, error: 'Cet admin est protégé par les variables d’environnement.' }, { status: 400 })
+    }
+
     const updateData = {
       ...data,
       ...(data.plan === 'PREMIUM' && { generationsLeft: 9999 }),
-      ...(data.plan === 'FREE' && { generationsLeft: 5 }),
+      ...(data.plan === 'FREE' && { generationsLeft: getDailyQuotaForPlan('FREE') }),
+      ...(data.role === 'ADMIN' && { plan: 'PREMIUM', generationsLeft: 9999 }),
     }
 
     const user = await prisma.user.update({
       where: { id: params.id },
       data: updateData,
-      select: { id: true, name: true, plan: true, role: true, generationsLeft: true },
+      select: { id: true, name: true, email: true, plan: true, role: true, generationsLeft: true },
     })
 
     return NextResponse.json({ success: true, data: user })
@@ -57,6 +75,19 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     // Prevent deleting yourself
     if (params.id === payload.sub) {
       return NextResponse.json({ success: false, error: 'Vous ne pouvez pas vous supprimer' }, { status: 400 })
+    }
+
+    const targetUser = await prisma.user.findUnique({
+      where: { id: params.id },
+      select: { email: true },
+    })
+
+    if (!targetUser) {
+      return NextResponse.json({ success: false, error: 'Utilisateur introuvable' }, { status: 404 })
+    }
+
+    if (isConfiguredAdminEmail(targetUser.email)) {
+      return NextResponse.json({ success: false, error: 'Cet admin est protégé par les variables d’environnement.' }, { status: 400 })
     }
 
     await prisma.user.delete({ where: { id: params.id } })

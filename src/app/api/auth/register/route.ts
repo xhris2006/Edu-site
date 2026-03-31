@@ -5,6 +5,7 @@ import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { signToken, getAuthCookieOptions } from '@/lib/auth'
+import { getUserSeedData } from '@/lib/admin'
 import prisma from '@/lib/prisma'
 
 const registerSchema = z.object({
@@ -37,7 +38,12 @@ export async function POST(req: NextRequest) {
     const hashedPassword = await bcrypt.hash(password, 10)
 
     const user = await prisma.user.create({
-      data: { name, email, password: hashedPassword, language },
+      data: getUserSeedData({
+        name,
+        email,
+        hashedPassword,
+        language,
+      }),
     })
 
     const token = await signToken({

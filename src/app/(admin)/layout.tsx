@@ -1,12 +1,12 @@
 'use client'
-// src/app/(admin)/layout.tsx
+
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { Zap, ShieldCheck, LayoutDashboard, Users, CreditCard, TrendingUp, LogOut, ArrowLeft } from 'lucide-react'
-import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import toast from 'react-hot-toast'
+import WhatsAppChannelPopup from '@/components/whatsapp-channel-popup'
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
@@ -14,14 +14,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [checking, setChecking] = useState(true)
 
   useEffect(() => {
-    fetch('/api/auth/me').then(r => r.json()).then(d => {
-      if (!d.success || d.data?.role !== 'ADMIN') {
-        toast.error('Accès refusé — Admins uniquement')
-        router.push('/dashboard')
-      } else {
-        setChecking(false)
-      }
-    }).catch(() => router.push('/login'))
+    fetch('/api/auth/me')
+      .then(r => r.json())
+      .then(d => {
+        if (!d.success || d.data?.role !== 'ADMIN') {
+          toast.error('Acces refuse - Admins uniquement')
+          router.push('/dashboard')
+        } else {
+          setChecking(false)
+        }
+      })
+      .catch(() => router.push('/login'))
   }, [router])
 
   const handleLogout = async () => {
@@ -31,64 +34,64 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (checking) {
     return (
-      <div className="min-h-screen bg-dark flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-dark">
         <div className="flex flex-col items-center gap-3">
-          <ShieldCheck className="w-10 h-10 text-primary animate-pulse" />
-          <p className="text-text-muted text-sm">Vérification des droits admin...</p>
+          <ShieldCheck className="h-10 w-10 animate-pulse text-primary" />
+          <p className="text-sm text-text-muted">Verification des droits admin...</p>
         </div>
       </div>
     )
   }
 
   const navItems = [
-    { href: '/admin', icon: LayoutDashboard, label: 'Vue d\'ensemble' },
+    { href: '/admin', icon: LayoutDashboard, label: "Vue d'ensemble" },
     { href: '/admin/users', icon: Users, label: 'Utilisateurs' },
     { href: '/admin/payments', icon: CreditCard, label: 'Paiements' },
     { href: '/admin/trends', icon: TrendingUp, label: 'Tendances' },
   ]
 
   return (
-    <div className="flex h-screen bg-dark overflow-hidden">
-      {/* Sidebar */}
-      <aside className="w-60 bg-dark-100 border-r border-card-border flex flex-col flex-shrink-0">
-        <div className="flex items-center gap-2 px-4 py-5 border-b border-card-border">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <Zap className="w-5 h-5 text-white" fill="white" />
+    <div className="flex h-screen overflow-hidden bg-dark">
+      <WhatsAppChannelPopup />
+
+      <aside className="flex w-60 shrink-0 flex-col border-r border-card-border bg-dark-100">
+        <div className="flex items-center gap-2 border-b border-card-border px-4 py-5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+            <Zap className="h-5 w-5 text-white" fill="white" />
           </div>
           <div>
-            <span className="font-display font-bold text-sm text-text-primary">CreatorZap</span>
-            <p className="text-xs text-primary font-semibold">Admin Panel</p>
+            <span className="font-display text-sm font-bold text-text-primary">CreatorZap</span>
+            <p className="text-xs font-semibold text-primary">Admin Panel</p>
           </div>
         </div>
 
-        <nav className="flex-1 px-3 py-4 space-y-1">
+        <nav className="flex-1 space-y-1 px-3 py-4">
           {navItems.map(item => (
             <Link
               key={item.href}
               href={item.href}
               className={cn('sidebar-link', pathname === item.href && 'active')}
             >
-              <item.icon className="w-4 h-4 flex-shrink-0" />
+              <item.icon className="h-4 w-4 shrink-0" />
               <span>{item.label}</span>
             </Link>
           ))}
         </nav>
 
-        <div className="px-3 pb-4 space-y-1">
+        <div className="space-y-1 px-3 pb-4">
           <Link href="/dashboard" className="sidebar-link text-text-muted">
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="h-4 w-4" />
             Retour au dashboard
           </Link>
-          <button onClick={handleLogout} className="sidebar-link w-full text-left hover:text-red-400 hover:bg-red-500/10">
-            <LogOut className="w-4 h-4" />
-            Déconnexion
+          <button onClick={handleLogout} className="sidebar-link w-full text-left hover:bg-red-500/10 hover:text-red-400">
+            <LogOut className="h-4 w-4" />
+            Deconnexion
           </button>
         </div>
       </aside>
 
-      {/* Main */}
       <main className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-6xl mx-auto">
+        <div className="mx-auto max-w-6xl">
           {children}
         </div>
       </main>
