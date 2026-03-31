@@ -45,7 +45,7 @@ export async function syncConfiguredAdminStatus<T extends {
       generationsLeft: PREMIUM_DAILY_QUOTA,
       lastResetAt: new Date(),
     },
-  }) as Promise<T>
+  }) as unknown as Promise<T>
 }
 
 export function getUserSeedData({
