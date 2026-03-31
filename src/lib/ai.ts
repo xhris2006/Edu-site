@@ -74,6 +74,10 @@ function buildUserPrompt(options: GenerateOptions): string {
 
 /** Main AI generation function */
 export async function generateContent(options: GenerateOptions): Promise<string> {
+  if (!AI_API_KEY) {
+    throw new Error('AI_API_KEY is not configured on the server')
+  }
+
   const systemPrompt = buildSystemPrompt(options.type, options.language)
   const userPrompt = buildUserPrompt(options)
 
@@ -95,8 +99,8 @@ export async function generateContent(options: GenerateOptions): Promise<string>
   })
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({}))
-    throw new Error(error.error?.message || `AI API error: ${response.status}`)
+    const error = await response.json().catch(async () => ({ message: await response.text().catch(() => '') }))
+    throw new Error(error.error?.message || error.message || `AI API error: ${response.status}`)
   }
 
   const data = await response.json()

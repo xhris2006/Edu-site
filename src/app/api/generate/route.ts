@@ -4,7 +4,7 @@ import { z } from 'zod'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
 import { generateContent, canGenerate } from '@/lib/ai'
-import { shouldResetGenerations } from '@/lib/utils'
+import { FREE_DAILY_QUOTA, getDailyQuotaForPlan, getGenerationsUsedToday, shouldResetGenerations } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     // Reset daily quota if needed
     let generationsLeft = user.generationsLeft
     if (shouldResetGenerations(user.lastResetAt)) {
-      generationsLeft = user.plan === 'PREMIUM' ? 9999 : 5
+      generationsLeft = getDailyQuotaForPlan(user.plan)
       await prisma.user.update({
         where: { id: user.id },
         data: { generationsLeft, lastResetAt: new Date() },
@@ -76,7 +76,9 @@ export async function POST(req: NextRequest) {
       data: {
         id: generation.id,
         result,
-        generationsLeft: user.plan === 'PREMIUM' ? 9999 : generationsLeft - 1,
+        generationsLeft: user.plan === 'PREMIUM' ? getDailyQuotaForPlan(user.plan) : generationsLeft - 1,
+        generationsUsed: user.plan === 'PREMIUM' ? 0 : getGenerationsUsedToday(generationsLeft - 1, user.plan),
+        generationsLimit: user.plan === 'PREMIUM' ? null : FREE_DAILY_QUOTA,
       },
     })
   } catch (err) {

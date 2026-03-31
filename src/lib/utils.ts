@@ -60,6 +60,18 @@ export function getPlatformEmoji(platform: string): string {
   return emojis[platform] || '✨'
 }
 
+export const FREE_DAILY_QUOTA = 5
+export const PREMIUM_DAILY_QUOTA = 9999
+
+export function getDailyQuotaForPlan(plan: string): number {
+  return plan === 'PREMIUM' ? PREMIUM_DAILY_QUOTA : FREE_DAILY_QUOTA
+}
+
+export function getGenerationsUsedToday(generationsLeft: number, plan: string): number {
+  if (plan === 'PREMIUM') return 0
+  return Math.max(0, FREE_DAILY_QUOTA - generationsLeft)
+}
+
 /** Reset generations count if new day */
 export function shouldResetGenerations(lastResetAt: Date): boolean {
   const now = new Date()

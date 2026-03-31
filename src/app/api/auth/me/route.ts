@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { getCurrentUser } from '@/lib/auth'
-import { shouldResetGenerations } from '@/lib/utils'
+import { FREE_DAILY_QUOTA, getDailyQuotaForPlan, getGenerationsUsedToday, shouldResetGenerations } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,12 +24,27 @@ export async function GET() {
     if (shouldResetGenerations(user.lastResetAt)) {
       const updated = await prisma.user.update({
         where: { id: user.id },
-        data: { generationsLeft: user.plan === 'PREMIUM' ? 9999 : 5, lastResetAt: new Date() },
+        data: { generationsLeft: getDailyQuotaForPlan(user.plan), lastResetAt: new Date() },
       })
-      return NextResponse.json({ success: true, data: { ...user, generationsLeft: updated.generationsLeft } })
+      return NextResponse.json({
+        success: true,
+        data: {
+          ...user,
+          generationsLeft: updated.generationsLeft,
+          generationsUsed: getGenerationsUsedToday(updated.generationsLeft, user.plan),
+          generationsLimit: user.plan === 'PREMIUM' ? null : FREE_DAILY_QUOTA,
+        },
+      })
     }
 
-    return NextResponse.json({ success: true, data: user })
+    return NextResponse.json({
+      success: true,
+      data: {
+        ...user,
+        generationsUsed: getGenerationsUsedToday(user.generationsLeft, user.plan),
+        generationsLimit: user.plan === 'PREMIUM' ? null : FREE_DAILY_QUOTA,
+      },
+    })
   } catch (err) {
     console.error('[ME]', err)
     return NextResponse.json({ success: false, error: 'Erreur serveur' }, { status: 500 })

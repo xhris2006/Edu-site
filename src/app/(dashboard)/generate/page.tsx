@@ -1,6 +1,6 @@
 'use client'
 // src/app/(dashboard)/generate/page.tsx
-import { Suspense, useState, useEffect } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import {
   Sparkles, Film, Instagram, Youtube, Hash, Lightbulb,
@@ -12,33 +12,35 @@ import { copyToClipboard } from '@/lib/utils'
 type ContentType = 'TIKTOK_CAPTION' | 'INSTAGRAM_CAPTION' | 'YOUTUBE_SCRIPT' | 'HASHTAGS' | 'CONTENT_IDEAS'
 type Language = 'fr' | 'en'
 
+const FREE_DAILY_QUOTA = 5
+
 const CONTENT_TYPES = [
   { id: 'TIKTOK_CAPTION' as ContentType, label: 'TikTok Caption', icon: Film, color: 'text-pink-400', bg: 'bg-pink-500/10', border: 'border-pink-500/30' },
   { id: 'INSTAGRAM_CAPTION' as ContentType, label: 'Instagram Caption', icon: Instagram, color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/30' },
   { id: 'YOUTUBE_SCRIPT' as ContentType, label: 'YouTube Script', icon: Youtube, color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/30' },
   { id: 'HASHTAGS' as ContentType, label: 'Hashtags', icon: Hash, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/30' },
-  { id: 'CONTENT_IDEAS' as ContentType, label: 'Idées de Contenu', icon: Lightbulb, color: 'text-yellow-400', bg: 'bg-yellow-500/10', border: 'border-yellow-500/30' },
+  { id: 'CONTENT_IDEAS' as ContentType, label: 'Idees de Contenu', icon: Lightbulb, color: 'text-yellow-400', bg: 'bg-yellow-500/10', border: 'border-yellow-500/30' },
 ]
 
 const TONES = [
-  { id: 'funny', fr: '😄 Drôle', en: '😄 Funny' },
-  { id: 'serious', fr: '🎯 Sérieux', en: '🎯 Serious' },
-  { id: 'inspirational', fr: '✨ Inspirant', en: '✨ Inspirational' },
-  { id: 'educational', fr: '📚 Éducatif', en: '📚 Educational' },
-  { id: 'promotional', fr: '🚀 Promo', en: '🚀 Promotional' },
+  { id: 'funny', fr: 'Drole', en: 'Funny' },
+  { id: 'serious', fr: 'Serieux', en: 'Serious' },
+  { id: 'inspirational', fr: 'Inspirant', en: 'Inspirational' },
+  { id: 'educational', fr: 'Educatif', en: 'Educational' },
+  { id: 'promotional', fr: 'Promo', en: 'Promotional' },
 ]
 
 const EXAMPLE_PROMPTS: Record<ContentType, Record<Language, string>> = {
   TIKTOK_CAPTION: {
-    fr: 'Recette de ndolé camerounais facile à préparer chez soi',
-    en: 'Easy homemade Cameroonian ndolé recipe for beginners',
+    fr: 'Recette de ndole camerounais facile a preparer chez soi',
+    en: 'Easy homemade Cameroonian ndole recipe for beginners',
   },
   INSTAGRAM_CAPTION: {
-    fr: 'Coucher de soleil magnifique à Kribi, plage paradisiaque',
+    fr: 'Coucher de soleil magnifique a Kribi, plage paradisiaque',
     en: 'Beautiful sunset in Kribi, paradise beach in Cameroon',
   },
   YOUTUBE_SCRIPT: {
-    fr: 'Comment créer une entreprise au Cameroun avec 0 FCFA de capital',
+    fr: 'Comment creer une entreprise au Cameroun avec 0 FCFA de capital',
     en: 'How to start a business in Africa with zero capital',
   },
   HASHTAGS: {
@@ -63,23 +65,28 @@ function GeneratePageContent() {
   const [loading, setLoading] = useState(false)
   const [saved, setSaved] = useState(false)
   const [userPlan, setUserPlan] = useState<string>('FREE')
-  const [generationsLeft, setGenerationsLeft] = useState(5)
+  const [generationsLeft, setGenerationsLeft] = useState(FREE_DAILY_QUOTA)
+  const [generationsUsed, setGenerationsUsed] = useState(0)
 
   useEffect(() => {
-    fetch('/api/auth/me').then(r => r.json()).then(d => {
-      if (d.success) {
-        setUserPlan(d.data.plan)
-        setGenerationsLeft(d.data.generationsLeft)
-        setLanguage(d.data.language || 'fr')
-      }
-    })
+    fetch('/api/auth/me')
+      .then(r => r.json())
+      .then(d => {
+        if (d.success) {
+          setUserPlan(d.data.plan)
+          setGenerationsLeft(d.data.generationsLeft)
+          setGenerationsUsed(d.data.generationsUsed || 0)
+          setLanguage(d.data.language || 'fr')
+        }
+      })
   }, [])
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
-      toast.error(language === 'fr' ? 'Décrivez votre contenu d\'abord' : 'Describe your content first')
+      toast.error(language === 'fr' ? 'Decrivez votre contenu d abord' : 'Describe your content first')
       return
     }
+
     if (userPlan === 'FREE' && generationsLeft <= 0) {
       toast.error(language === 'fr' ? 'Limite atteinte. Passez au Premium!' : 'Limit reached. Upgrade to Premium!')
       return
@@ -95,13 +102,23 @@ function GeneratePageContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type: selectedType, prompt, tone, language }),
       })
+
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
+
       setResult(data.data.result)
-      setGenerationsLeft(prev => Math.max(0, prev - 1))
-      toast.success(language === 'fr' ? 'Contenu généré! 🎉' : 'Content generated! 🎉')
+
+      if (typeof data.data.generationsLeft === 'number') {
+        setGenerationsLeft(data.data.generationsLeft)
+      }
+
+      if (typeof data.data.generationsUsed === 'number') {
+        setGenerationsUsed(data.data.generationsUsed)
+      }
+
+      toast.success(language === 'fr' ? 'Contenu genere!' : 'Content generated!')
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Erreur de génération')
+      toast.error(err instanceof Error ? err.message : 'Erreur de generation')
     } finally {
       setLoading(false)
     }
@@ -109,7 +126,7 @@ function GeneratePageContent() {
 
   const handleCopy = async () => {
     const ok = await copyToClipboard(result)
-    if (ok) toast.success(language === 'fr' ? 'Copié! ✓' : 'Copied! ✓')
+    if (ok) toast.success(language === 'fr' ? 'Copie!' : 'Copied!')
   }
 
   const handleSaveFavorite = async () => {
@@ -119,9 +136,10 @@ function GeneratePageContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt, result, type: selectedType, language }),
       })
+
       if (res.ok) {
         setSaved(true)
-        toast.success(language === 'fr' ? 'Sauvegardé en favoris! ❤️' : 'Saved to favorites! ❤️')
+        toast.success(language === 'fr' ? 'Sauvegarde en favoris!' : 'Saved to favorites!')
       }
     } catch {
       toast.error('Erreur de sauvegarde')
@@ -132,35 +150,32 @@ function GeneratePageContent() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6 animate-fade-in">
-      {/* Header */}
       <div>
         <h1 className="page-title flex items-center gap-2">
           <Sparkles className="w-6 h-6 text-primary" />
-          {language === 'fr' ? 'Générer du Contenu' : 'Generate Content'}
+          {language === 'fr' ? 'Generer du Contenu' : 'Generate Content'}
         </h1>
         <p className="page-subtitle">
-          {language === 'fr' ? 'Créez du contenu viral en quelques secondes' : 'Create viral content in seconds'}
+          {language === 'fr' ? 'Creez du contenu viral en quelques secondes' : 'Create viral content in seconds'}
         </p>
       </div>
 
-      {/* Free plan warning */}
       {userPlan === 'FREE' && (
         <div className="flex items-center justify-between p-3 bg-primary/10 border border-primary/20 rounded-xl">
           <div className="flex items-center gap-2">
             <Zap className="w-4 h-4 text-primary" />
             <span className="text-sm text-text-secondary">
               {language === 'fr'
-                ? `${generationsLeft} génération(s) restante(s) aujourd'hui`
-                : `${generationsLeft} generation(s) left today`}
+                ? `${generationsUsed}/${FREE_DAILY_QUOTA} requetes utilisees aujourd'hui`
+                : `${generationsUsed}/${FREE_DAILY_QUOTA} request(s) used today`}
             </span>
           </div>
           <a href="/pricing" className="text-xs text-primary font-semibold hover:underline">
-            {language === 'fr' ? 'Passer Premium →' : 'Upgrade →'}
+            {language === 'fr' ? 'Passer Premium ->' : 'Upgrade ->'}
           </a>
         </div>
       )}
 
-      {/* Content type selector */}
       <div>
         <label className="label">{language === 'fr' ? 'Type de contenu' : 'Content type'}</label>
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
@@ -185,19 +200,17 @@ function GeneratePageContent() {
         </div>
       </div>
 
-      {/* Prompt + settings */}
       <div className="card space-y-4">
-        {/* Prompt */}
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className="label mb-0">
-              {language === 'fr' ? 'Décrivez votre contenu' : 'Describe your content'}
+              {language === 'fr' ? 'Decrivez votre contenu' : 'Describe your content'}
             </label>
             <button
               onClick={() => setPrompt(EXAMPLE_PROMPTS[selectedType][language])}
               className="text-xs text-primary hover:underline"
             >
-              {language === 'fr' ? 'Exemple →' : 'Example →'}
+              {language === 'fr' ? 'Exemple ->' : 'Example ->'}
             </button>
           </div>
           <textarea
@@ -210,7 +223,6 @@ function GeneratePageContent() {
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-          {/* Tone */}
           <div>
             <label className="label">{language === 'fr' ? 'Ton' : 'Tone'}</label>
             <div className="relative">
@@ -227,7 +239,6 @@ function GeneratePageContent() {
             </div>
           </div>
 
-          {/* Language */}
           <div>
             <label className="label">{language === 'fr' ? 'Langue' : 'Language'}</label>
             <div className="relative">
@@ -236,15 +247,14 @@ function GeneratePageContent() {
                 value={language}
                 onChange={e => setLanguage(e.target.value as Language)}
               >
-                <option value="fr">🇫🇷 Français</option>
-                <option value="en">🇬🇧 English</option>
+                <option value="fr">Francais</option>
+                <option value="en">English</option>
               </select>
               <ChevronDown className="w-4 h-4 text-text-muted absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
           </div>
         </div>
 
-        {/* Generate button */}
         <button
           onClick={handleGenerate}
           disabled={loading || (userPlan === 'FREE' && generationsLeft <= 0)}
@@ -253,23 +263,22 @@ function GeneratePageContent() {
           {loading ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
-              {language === 'fr' ? 'Génération en cours...' : 'Generating...'}
+              {language === 'fr' ? 'Generation en cours...' : 'Generating...'}
             </>
           ) : userPlan === 'FREE' && generationsLeft <= 0 ? (
             <>
               <Lock className="w-5 h-5" />
-              {language === 'fr' ? 'Limite atteinte — Passer Premium' : 'Limit reached — Upgrade'}
+              {language === 'fr' ? 'Limite atteinte - Passer Premium' : 'Limit reached - Upgrade'}
             </>
           ) : (
             <>
               <Sparkles className="w-5 h-5" />
-              {language === 'fr' ? 'Générer' : 'Generate'}
+              {language === 'fr' ? 'Generer' : 'Generate'}
             </>
           )}
         </button>
       </div>
 
-      {/* Result */}
       {result && (
         <div className={`card border ${selectedTypeInfo.border} animate-slide-up`}>
           <div className="flex items-center justify-between mb-4">
@@ -290,7 +299,7 @@ function GeneratePageContent() {
                 }`}
               >
                 <Heart className={`w-3.5 h-3.5 ${saved ? 'fill-primary' : ''}`} />
-                {saved ? (language === 'fr' ? 'Sauvegardé' : 'Saved') : (language === 'fr' ? 'Sauvegarder' : 'Save')}
+                {saved ? (language === 'fr' ? 'Sauvegarde' : 'Saved') : (language === 'fr' ? 'Sauvegarder' : 'Save')}
               </button>
               <button
                 onClick={handleCopy}
@@ -306,13 +315,12 @@ function GeneratePageContent() {
             <pre className="text-text-primary text-sm whitespace-pre-wrap font-sans leading-relaxed">{result}</pre>
           </div>
 
-          {/* Regenerate */}
           <button
             onClick={handleGenerate}
             disabled={loading}
             className="btn-secondary w-full mt-4 text-sm"
           >
-            🔄 {language === 'fr' ? 'Régénérer' : 'Regenerate'}
+            {language === 'fr' ? 'Regenerer' : 'Regenerate'}
           </button>
         </div>
       )}

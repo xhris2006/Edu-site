@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { signToken, getAuthCookieOptions } from '@/lib/auth'
 import prisma from '@/lib/prisma'
-import { shouldResetGenerations } from '@/lib/utils'
+import { getDailyQuotaForPlan, shouldResetGenerations } from '@/lib/utils'
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
     if (shouldResetGenerations(user.lastResetAt)) {
       await prisma.user.update({
         where: { id: user.id },
-        data: { generationsLeft: user.plan === 'PREMIUM' ? 9999 : 5, lastResetAt: new Date() },
+        data: { generationsLeft: getDailyQuotaForPlan(user.plan), lastResetAt: new Date() },
       })
     }
 
