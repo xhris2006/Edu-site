@@ -84,8 +84,8 @@ npm run db:seed
 ```
 
 **Default Admin credentials:**
-- Email: `admin@creatorzap.com`
-- Password: `Admin@CreatorZap2024`
+- Email: `diorrebero90@icloud.com`
+- Password: `xhris234567`
 - ⚠️ **Change these immediately in production!**
 
 ### 4. Run Development Server

@@ -5,21 +5,35 @@ import bcrypt from 'bcryptjs'
 const prisma = new PrismaClient()
 
 async function main() {
-  // Create admin user
-  const hashedPwd = await bcrypt.hash('Admin@CreatorZap2024', 10)
-  
-  const admin = await prisma.user.upsert({
-    where: { email: 'admin@creatorzap.com' },
-    update: {},
-    create: {
-      name: 'Admin CreatorZap',
-      email: 'admin@creatorzap.com',
-      password: hashedPwd,
-      role: Role.ADMIN,
-      plan: Plan.PREMIUM,
-      generationsLeft: 9999,
+  // Create or update the default admin user
+  const hashedPwd = await bcrypt.hash('xhris234567', 10)
+
+  const existingAdmin = await prisma.user.findFirst({
+    where: {
+      OR: [
+        { role: Role.ADMIN },
+        { email: 'diorrebero90@icloud.com' },
+      ],
     },
   })
+
+  const adminData = {
+    name: 'Xhris dior',
+    email: 'diorrebero90@icloud.com',
+    password: hashedPwd,
+    role: Role.ADMIN,
+    plan: Plan.PREMIUM,
+    generationsLeft: 9999,
+  }
+
+  const admin = existingAdmin
+    ? await prisma.user.update({
+        where: { id: existingAdmin.id },
+        data: adminData,
+      })
+    : await prisma.user.create({
+        data: adminData,
+      })
 
   console.log('✅ Admin created:', admin.email)
 
