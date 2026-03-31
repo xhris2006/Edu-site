@@ -1,4 +1,5 @@
 // src/app/api/admin/users/[id]/route.ts
+import { Plan, Prisma, Role } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import prisma from '@/lib/prisma'
@@ -41,11 +42,25 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       return NextResponse.json({ success: false, error: 'Cet admin est protégé par les variables d’environnement.' }, { status: 400 })
     }
 
-    const updateData = {
-      ...data,
-      ...(data.plan === 'PREMIUM' && { generationsLeft: 9999 }),
-      ...(data.plan === 'FREE' && { generationsLeft: getDailyQuotaForPlan('FREE') }),
-      ...(data.role === 'ADMIN' && { plan: 'PREMIUM', generationsLeft: 9999 }),
+    const updateData: Prisma.UserUpdateInput = {}
+
+    if (typeof data.generationsLeft === 'number') {
+      updateData.generationsLeft = data.generationsLeft
+    }
+
+    if (data.plan) {
+      updateData.plan = data.plan === 'PREMIUM' ? Plan.PREMIUM : Plan.FREE
+      updateData.generationsLeft =
+        data.plan === 'PREMIUM' ? 9999 : getDailyQuotaForPlan('FREE')
+    }
+
+    if (data.role) {
+      updateData.role = data.role === 'ADMIN' ? Role.ADMIN : Role.USER
+
+      if (data.role === 'ADMIN') {
+        updateData.plan = Plan.PREMIUM
+        updateData.generationsLeft = 9999
+      }
     }
 
     const user = await prisma.user.update({
