@@ -8,9 +8,23 @@ interface GenerateOptions {
   tone?: string
 }
 
-const AI_BASE_URL = (process.env.AI_BASE_URL || 'https://api.openai.com/v1').replace(/\/+$/, '')
-const AI_API_KEY = process.env.AI_API_KEY || ''
-const AI_MODEL = process.env.AI_MODEL || 'gpt-4o-mini'
+const AI_BASE_URL = (
+  process.env.AI_BASE_URL ||
+  process.env.OPENAI_BASE_URL ||
+  process.env.OPENAI_API_BASE ||
+  'https://api.openai.com/v1'
+).replace(/\/+$/, '')
+
+const AI_API_KEY =
+  process.env.AI_API_KEY ||
+  process.env.OPENAI_API_KEY ||
+  process.env.OPENAI_KEY ||
+  ''
+
+const AI_MODEL =
+  process.env.AI_MODEL ||
+  process.env.OPENAI_MODEL ||
+  'gpt-4o-mini'
 
 export class AIProviderError extends Error {
   status: number
@@ -81,7 +95,11 @@ function buildUserPrompt(options: GenerateOptions): string {
 
 export async function generateContent(options: GenerateOptions): Promise<string> {
   if (!AI_API_KEY) {
-    throw new AIProviderError('AI_API_KEY is not configured on the server', 503, 'missing_api_key')
+    throw new AIProviderError(
+      'Aucune cle OpenAI detectee sur le serveur. Configurez AI_API_KEY ou OPENAI_API_KEY dans Vercel.',
+      503,
+      'missing_api_key'
+    )
   }
 
   const systemPrompt = buildSystemPrompt(options.type, options.language)
