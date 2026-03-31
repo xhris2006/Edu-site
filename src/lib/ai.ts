@@ -11,9 +11,9 @@ interface GenerateOptions {
   tone?: string
 }
 
-const AI_BASE_URL = process.env.AI_BASE_URL || 'https://api.openai.com/v1'
+const AI_BASE_URL = (process.env.AI_BASE_URL || 'https://api.openai.com/v1').replace(/\/+$/, '')
 const AI_API_KEY = process.env.AI_API_KEY || ''
-const AI_MODEL = process.env.AI_MODEL || 'gpt-3.5-turbo'
+const AI_MODEL = process.env.AI_MODEL || 'gpt-4o-mini'
 
 /** Build system prompt based on content type and language */
 function buildSystemPrompt(type: ContentType, language: Language): string {
